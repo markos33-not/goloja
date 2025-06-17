@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Permitir Notificaciones</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    button {
+      padding: 15px 25px;
+      background: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+
+  <button onclick="solicitarPermiso()">Activar Notificaciones</button>
+
+  <script>
+    function solicitarPermiso() {
+      if (!("Notification" in window)) {
+        alert("Este navegador no soporta notificaciones.");
+        return;
+      }
+
+      Notification.requestPermission().then(function (permiso) {
+        if (permiso === "granted") {
+          new Notification("¡Gracias por permitir notificaciones!", {
+            body: "Recibirás alertas de nuevos lugares y actualizaciones.",
+            icon: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png" // opcional
+          });
+        } else if (permiso === "denied") {
+          alert("Has bloqueado las notificaciones. Puedes cambiarlas en la configuración del navegador.");
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>

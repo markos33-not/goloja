@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa General de Parroquias Urbanas</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root {
+      --main-bg: #f7f9fb;
+      --panel-bg: #fff;
+      --border: #e0e4ea;
+      --shadow: 0 4px 24px #0001;
+      --primary: #4285F4;
+      --secondary: #222;
+      --radius: 20px;
+      --radius-sm: 12px;
+      --text: #222;
+      --text-light: #4a627a;
+      --accent: #f0f4fa;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--main-bg);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      height: 100vh;
+    }
+    .map-container {
+      width: 100vw;
+      height: 100vh;
+      min-height: 100vh;
+      max-width: 100vw;
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: stretch;
+      overflow: hidden;
+    }
+    #mapa-parroquias {
+      width: 100vw;
+      height: 100vh;
+      min-height: 100vh;
+      margin: 0;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+      display: block;
+      background: var(--main-bg);
+      transition: border-color 0.2s;
+      z-index: 2;
+    }
+    .btn-volver {
+      position: fixed;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2000;
+      background: #f5f5f5;
+      border: 1.5px solid #d1d5db;
+      border-radius: 22px;
+      width: auto;
+      min-width: 110px;
+      height: 44px;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px #0001;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, border 0.2s, color 0.2s;
+      text-decoration: none;
+      font-size: 1.13em;
+      font-weight: 600;
+      color: #222;
+      letter-spacing: 0.5px;
+    }
+    .btn-volver:hover {
+      background: #e5e7eb;
+      border-color: #bfc3c9;
+      color: #222;
+      box-shadow: 0 4px 18px #0002;
+    }
+    .btn-volver .material-symbols-outlined {
+      display: none;
+    }
+    h3 {
+      display: none;
+    }
+    /* Botón leyenda minimalista */
+    #btnLeyenda {
+      position: fixed;
+      left: 24px;
+      bottom: 24px;
+      z-index: 5002;
+      background: #f5f5f5;
+      border: 1.5px solid #d1d5db;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px #0001;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, border 0.2s;
+      outline: none;
+    }
+    #btnLeyenda:focus {
+      outline: 2px solid #bfc3c9;
+    }
+    #btnLeyenda:hover {
+      background: #e5e7eb;
+      border-color: #bfc3c9;
+      box-shadow: 0 4px 18px #0002;
+    }
+    #btnLeyenda .material-symbols-outlined {
+      color: #222;
+      font-size: 2em;
+      transition: color 0.2s;
+      pointer-events: none;
+    }
+    #btnLeyenda:hover .material-symbols-outlined {
+      color: #222;
+    }
+    /* Modal leyenda */
+    #leyendaModal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0; right: 0; top: 0; bottom: 0;
+      background: rgba(0,0,0,0.18);
+      backdrop-filter: blur(2px);
+      align-items: center;
+      justify-content: center;
+    }
+    #leyendaModal.active {
+      display: flex;
+    }
+    .leyenda-modal-content {
+      background: var(--panel-bg);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      padding: 22px 18px 18px 18px;
+      min-width: 220px;
+      max-width: 320px;
+      width: 92vw;
+      position: relative;
+      animation: fadeInScale 0.22s;
+      border: 1.5px solid var(--border);
+    }
+    #cerrarLeyenda {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      font-size: 1.3em;
+      color: #888;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    #cerrarLeyenda:hover {
+      color: var(--primary);
+    }
+    .leyenda-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .leyenda-item {
+      display: flex;
+      align-items: center;
+      font-size: 1em;
+      color: var(--secondary);
+      font-weight: 500;
+      border-radius: 6px;
+      padding: 4px 0;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .leyenda-item:hover {
+      background: var(--accent);
+      color: var(--primary);
+    }
+    .leyenda-color {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    /* Modal parroquia */
+    .modal-bottom-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--panel-bg);
+      border-top-left-radius: var(--radius-sm);
+      border-top-right-radius: var(--radius-sm);
+      box-shadow: 0 -2px 16px #0001;
+      z-index: 4000;
+      transition: height 0.3s cubic-bezier(.4,1.6,.4,1), transform 0.3s cubic-bezier(.4,1.6,.4,1);
+      display: flex;
+      flex-direction: column;
+      height: 80px;
+      max-height: 92vh;
+      transform: translateY(100%);
+      pointer-events: none;
+      touch-action: none;
+      will-change: height, transform;
+    }
+    .modal-bottom-sheet.active {
+      pointer-events: all;
+      transform: translateY(0);
+    }
+    .modal-drag {
+      width: 100%;
+      height: 28px;
+      background: transparent;
+      position: relative;
+      margin: 0;
+      cursor: grab;
+      touch-action: none;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .modal-drag::before {
+      content: "";
+      display: block;
+      width: 48px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+    .modal-content {
+      background: var(--panel-bg);
+      border-radius: 10px 10px 0 0;
+      padding: 10px 18px 18px 18px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    #leaflet-map {
+      width: 100%;
+      height: 140px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--border);
+      background: var(--main-bg);
+    }
+    .modal-overlay {
+      position: fixed;
+      z-index: 3999;
+      inset: 0;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(2px);
+      transition: opacity 0.3s;
+      opacity: 1;
+      pointer-events: all;
+      display: none;
+    }
+    .modal-overlay.active {
+      display: block;
+      opacity: 1;
+    }
+    .modal-overlay.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .parroquia-label {
+      background: var(--panel-bg);
+      padding: 4px 14px;
+      border-radius: 10px;
+      font-size: 1em;
+      color: var(--primary);
+      font-weight: 600;
+      box-shadow: 0 2px 8px #0001;
+      border: 1px solid var(--border);
+      letter-spacing: 0.2px;
+      opacity: 0.97;
+      pointer-events: none;
+      user-select: none;
+    }
+    .leaflet-interactive {
+      transition: filter 0.18s, stroke 0.18s;
+      cursor: pointer;
+    }
+    .leaflet-interactive:hover {
+      filter: brightness(1.08) drop-shadow(0 0 4px #bbb);
+      stroke: var(--primary) !important;
+      stroke-width: 2.5 !important;
+    }
+    @media (max-width: 900px) {
+      .map-container, #mapa-parroquias {
+        height: 100vh;
+        min-height: 100vh;
+        max-width: 100vw;
+      }
+      .btn-volver {
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 80px;
+        height: 38px;
+        padding: 0 18px;
+        font-size: 1em;
+      }
+      #btnLeyenda {
+        left: 12px;
+        bottom: 12px;
+        width: 40px;
+        height: 40px;
+      }
+      .leyenda-modal-content {
+        min-width: 120px;
+        font-size: 0.95em;
+        padding: 10px 8px 8px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+    <a href="#" class="btn-volver" title="Volver">Volver</a>
+    <h3>Mapa de Parroquias Urbanas</h3>
+    <div class="map-container">
+      <div id="mapa-parroquias"></div>
+    </div>
+
+    <!-- Botón para mostrar leyenda -->
+    <button id="btnLeyenda" title="Mostrar leyenda" aria-label="Mostrar leyenda">
+      <span class="material-symbols-outlined">map</span>
+    </button>
+
+    <!-- Modal Leyenda -->
+    <div id="leyendaModal">
+      <div class="leyenda-modal-content">
+        <button id="cerrarLeyenda" aria-label="Cerrar leyenda">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+        <h4>Leyenda de Parroquias</h4>
+        <div class="leyenda-list">
+          <div class="leyenda-item" data-parroquia="El Sagrario">
+            <span class="leyenda-color" style="background:#4285F4"></span>
+            El Sagrario
+          </div>
+          <div class="leyenda-item" data-parroquia="Sucre">
+            <span class="leyenda-color" style="background:#34A853"></span>
+            Sucre
+          </div>
+          <div class="leyenda-item" data-parroquia="El Valle">
+            <span class="leyenda-color" style="background:#FBBC05"></span>
+            El Valle
+          </div>
+          <div class="leyenda-item" data-parroquia="San Sebastián">
+            <span class="leyenda-color" style="background:#EA4335"></span>
+            San Sebastián
+          </div>
+          <div class="leyenda-item" data-parroquia="Punzara">
+            <span class="leyenda-color" style="background:#8E24AA"></span>
+            Punzara
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal parroquia -->
+    <div class="modal-bottom-sheet" id="modalSheet">
+      <div class="modal-drag"></div>
+      <div class="modal-content" id="modalContent"></div>
+    </div>
+    <div id="modalOverlay" class="modal-overlay hide"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+    // Parroquias urbanas con límites (agrega más coordenadas según necesites)
+    const parroquias = [
+      {
+        nombre: "El Sagrario",
+        color: "#4285F4",
+        coords: [
+          [-3.979159, -79.196659],
+          [-3.980188, -79.197684],
+          [-3.980202, -79.201747],
+          [-3.979549, -79.201801],
+          [-3.9797, -79.2035],
+          [-3.9810, -79.2039],
+          [-3.9825, -79.2045],
+          [-3.9872, -79.2043],
+          [-3.9935, -79.2040],
+          [-3.9937, -79.2020],
+          [-3.9952, -79.2008],
+          [-4.000044, -79.200168],
+          [-3.9990, -79.1985],
+          [-3.9975, -79.1965],
+          [-3.9958, -79.1950],
+          [-3.9938, -79.1940],
+          [-3.9915, -79.1935],
+          [-3.9895, -79.1945],
+          [-3.9878, -79.1958],
+          [-3.979159, -79.196659]
+        ]
+      },
+      {
+        nombre: "Sucre",
+        color: "#34A853",
+        coords: [
+          [-3.9935, -79.2035],
+          [-3.9937, -79.2020],
+          [-3.9952, -79.2008],
+          [-3.9958, -79.2000],
+          [-3.9935, -79.2035]
+        ]
+      },
+      {
+        nombre: "El Valle",
+        color: "#FBBC05",
+        coords: [
+          [-3.996, -79.211],
+          [-3.997, -79.210],
+          [-3.998, -79.211],
+          [-3.996, -79.211]
+        ]
+      },
+      {
+        nombre: "San Sebastián",
+        color: "#EA4335",
+        coords: [
+          [-3.995, -79.208],
+          [-3.996, -79.207],
+          [-3.997, -79.208],
+          [-3.995, -79.208]
+        ]
+      },
+      {
+        nombre: "Punzara",
+        color: "#8E24AA",
+        coords: [
+          [-3.991, -79.217],
+          [-3.992, -79.216],
+          [-3.993, -79.217],
+          [-3.991, -79.217]
+        ]
+      }
+    ];
+
+    // Info de cada parroquia (puedes personalizar)
+    const infoParroquias = {
+      "El Sagrario": {
+        desc: "Iglesia emblemática de Loja.",
+        actividades: [
+          "Museo de la Cultura Lojana.",
+          "Puerta de la ciudad",
+          "Catedral"
+        ]
+      },
+      "Sucre": {
+        desc: "Calle tradicional y comercial.",
+        actividades: [
+          "Recorrido por tiendas y comercios.",
+          "Degustación de gastronomía local.",
+          "Paseo por la arquitectura colonial."
+        ]
+      },
+      "El Valle": {
+        desc: "Zona natural y residencial.",
+        actividades: [
+          "Senderismo y caminatas.",
+          "Observación de aves.",
+          "Picnic en áreas verdes."
+        ]
+      },
+      "San Sebastián": {
+        desc: "Plaza histórica de Loja.",
+        actividades: [
+          "Visita a la plaza histórica.",
+          "Eventos culturales y ferias.",
+          "Fotografía urbana."
+        ]
+      },
+      "Punzara": {
+        desc: "Mirador natural de Loja.",
+        actividades: [
+          "Mirador panorámico.",
+          "Caminatas ecológicas.",
+          "Observación de la ciudad."
+        ]
+      }
+    };
+
+    // --- Mapa general ---
+    var mapParroquias = L.map('mapa-parroquias', {
+      zoomControl: false,
+      attributionControl: false
+    }).setView([-3.993, -79.204], 14);
+
+    // Capas base
+    const baseLayers = {
+      "Default": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }),
+      "Satélite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 })
+    };
+    // Cambia aquí: agrega primero la capa Satélite
+    baseLayers["Satélite"].addTo(mapParroquias);
+
+    // Control de capas solo con Callejero y Satélite
+    L.control.layers(baseLayers, null, { position: 'topright', collapsed: false }).addTo(mapParroquias);
+
+    // Zoom control en esquina inferior derecha
+    L.control.zoom({ position: 'bottomright' }).addTo(mapParroquias);
+
+    // Animación y hover en polígonos
+    parroquias.forEach(parroquia => {
+      var poly = L.polygon(parroquia.coords, {
+        color: parroquia.color,
+        fillColor: parroquia.color,
+        fillOpacity: 0.22,
+        weight: 2.5,
+        className: 'parroquia-polygon'
+      }).addTo(mapParroquias);
+
+      var center = poly.getBounds().getCenter();
+
+      L.tooltip({
+        permanent: true,
+        direction: "top",
+        className: "parroquia-label"
+      })
+        .setContent(`<b>${parroquia.nombre}</b>`)
+        .setLatLng(center)
+        .addTo(mapParroquias);
+
+      // Hover visual feedback
+      poly.on('mouseover', function() {
+        this.setStyle({ fillOpacity: 0.38, weight: 4 });
+        this.bringToFront();
+      });
+      poly.on('mouseout', function() {
+        this.setStyle({ fillOpacity: 0.22, weight: 2.5 });
+      });
+
+      // Al hacer clic en el polígono, zoom animado y abre el modal de la parroquia
+      poly.on('click', function() {
+        mapParroquias.flyToBounds(parroquia.coords, { duration: 0.7, padding: [40, 40] });
+        setTimeout(() => abrirModalParroquia(parroquia.nombre), 700);
+      });
+    });
+
+    var allCoords = parroquias.flatMap(p => p.coords);
+    mapParroquias.fitBounds(allCoords);
+
+    // --- Modal parroquia ---
+    const modal = document.getElementById('modalSheet');
+    const modalContent = document.getElementById('modalContent');
+    const drag = document.querySelector('.modal-drag');
+    const overlay = document.getElementById('modalOverlay');
+    let leafletMap = null;
+    let leafletPolygon = null;
+    let modalState = 'closed';
+    let startY = 0, currentY = 0, dragging = false, lastDiff = 0, startHeight = 0;
+
+    function abrirModalParroquia(nombre) {
+      const parroquia = parroquias.find(p => p.nombre === nombre);
+      const info = infoParroquias[nombre] || { desc: "", actividades: [] };
+
+      let html = `
+        <h4 style="margin: 12px 0 8px 0; font-size: 1.2em; color: #2d3a4b;">${nombre}</h4>
+        <p style="margin: 0 0 10px 0; color: #4a627a; font-size: 0.95em; line-height: 1.4;">${info.desc}</p>
+        <div id="leaflet-map" style="width:100%;height:180px;border-radius:12px;margin:14px 0 10px 0;"></div>
+        <h5 style="margin-top: 16px; font-size: 1.1em; color: #2d3a4b;">Actividades:</h5>
+        <ul style="margin: 0; padding-left: 20px; color: #4a627a; font-size: 0.9em; line-height: 1.6;">
+          ${info.actividades.map(act => `<li style="margin-bottom: 4px;">${act}</li>`).join('')}
+        </ul>
+      `;
+
+      modalContent.innerHTML = html;
+      modal.classList.add('active');
+      modalState = 'medium';
+      modal.style.height = '85vh';
+      overlay.classList.add('active');
+      overlay.classList.remove('hide');
+      document.body.style.overflow = 'hidden';
+
+      setTimeout(() => {
+        if (leafletMap) {
+          leafletMap.remove();
+          leafletMap = null;
+        }
+        leafletMap = L.map('leaflet-map', {
+          zoomControl: false,
+          attributionControl: false
+        }).setView(parroquia.coords[0], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+        }).addTo(leafletMap);
+
+        leafletPolygon = L.polygon(parroquia.coords, {
+          color: parroquia.color,
+          fillColor: parroquia.color,
+          fillOpacity: 0.22,
+          weight: 2.5
+        }).addTo(leafletMap);
+        leafletMap.fitBounds(parroquia.coords);
+
+        var center = leafletPolygon.getBounds().getCenter();
+        L.tooltip({
+          permanent: true,
+          direction: "top",
+          className: "parroquia-label"
+        })
+          .setContent(`<b>${parroquia.nombre}</b>`)
+          .setLatLng(center)
+          .addTo(leafletMap);
+      }, 200);
+    }
+
+    function cerrarModal() {
+      modal.classList.remove('active');
+      overlay.classList.remove('active');
+      overlay.classList.add('hide');
+      document.body.style.overflow = '';
+      modal.style.height = '';
+      modalState = 'closed';
+      if (leafletMap) {
+        leafletMap.remove();
+        leafletMap = null;
+      }
+      // Al cerrar el modal, el mapa vuelve a su zoom original (todas las parroquias)
+      var allCoords = parroquias.flatMap(p => p.coords);
+      mapParroquias.fitBounds(allCoords);
+    }
+    overlay.onclick = cerrarModal;
+
+    // Drag para móvil y escritorio
+    drag.addEventListener('touchstart', e => {
+      if (modalState === 'closed') return;
+      dragging = true;
+      startY = e.touches[0].clientY;
+      startHeight = modal.offsetHeight;
+      modal.style.transition = 'none';
+    });
+    drag.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      currentY = e.touches[0].clientY;
+      let diff = currentY - startY;
+      let newHeight = startHeight - diff;
+      let maxH = window.innerHeight * 0.92;
+      let minH = 80;
+      if (newHeight > maxH) newHeight = maxH;
+      if (newHeight < minH) newHeight = minH;
+      modal.style.height = newHeight + 'px';
+      lastDiff = diff;
+    });
+    drag.addEventListener('touchend', e => {
+      if (!dragging) return;
+      dragging = false;
+      modal.style.transition = '';
+      let vh = window.innerHeight;
+      let h = modal.offsetHeight;
+      if (h < vh * 0.5) {
+        cerrarModal();
+      } else if (h > vh * 0.7) {
+        modal.style.height = '92vh';
+        modalState = 'expanded';
+      } else {
+        modal.style.height = '70vh';
+        modalState = 'medium';
+      }
+    });
+    drag.addEventListener('mousedown', e => {
+      if (modalState === 'closed') return;
+      dragging = true;
+      startY = e.clientY;
+      startHeight = modal.offsetHeight;
+      modal.style.transition = 'none';
+      document.body.style.userSelect = 'none';
+    });
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      currentY = e.clientY;
+      let diff = currentY - startY;
+      let newHeight = startHeight - diff;
+      let maxH = window.innerHeight * 0.92;
+      let minH = 80;
+      if (newHeight > maxH) newHeight = maxH;
+      if (newHeight < minH) newHeight = minH;
+      modal.style.height = newHeight + 'px';
+      lastDiff = diff;
+    });
+    window.addEventListener('mouseup', e => {
+      if (!dragging) return;
+      dragging = false;
+      modal.style.transition = '';
+      document.body.style.userSelect = '';
+      let vh = window.innerHeight;
+      let h = modal.offsetHeight;
+      if (h < vh * 0.5) {
+        cerrarModal();
+      } else if (h > vh * 0.7) {
+        modal.style.height = '92vh';
+        modalState = 'expanded';
+      } else {
+        modal.style.height = '70vh';
+        modalState = 'medium';
+      }
+    });
+
+    // Leyenda modal: click en parroquia de la leyenda
+    document.querySelectorAll('.leyenda-item').forEach(btn => {
+      btn.onclick = function() {
+        const parroquia = this.getAttribute('data-parroquia');
+        const parroquiaObj = parroquias.find(p => p.nombre === parroquia);
+        if (parroquiaObj) {
+          document.getElementById('leyendaModal').classList.remove('active');
+          mapParroquias.flyToBounds(parroquiaObj.coords, { duration: 0.7, padding: [40, 40] });
+          setTimeout(() => abrirModalParroquia(parroquia), 700);
+        }
+      };
+    });
+
+    // Botón volver (solo uno, mejorado)
+    document.querySelector('.btn-volver').onclick = function(e) {
+      e.preventDefault();
+      window.history.length > 1 ? window.history.back() : window.location.href = '/';
+    };
+
+    // Mostrar/ocultar leyenda modal
+    const btnLeyenda = document.getElementById('btnLeyenda');
+    const leyendaModal = document.getElementById('leyendaModal');
+    const cerrarLeyenda = document.getElementById('cerrarLeyenda');
+    btnLeyenda.onclick = function() {
+      leyendaModal.classList.add('active');
+    };
+    cerrarLeyenda.onclick = function() {
+      leyendaModal.classList.remove('active');
+    };
+    leyendaModal.onclick = function(e) {
+      if (e.target === leyendaModal) leyendaModal.classList.remove('active');
+    };
+
+    // FUNCIONES INCREÍBLES EXTRA EN EL MAPA
+
+    // 1. Mostrar ubicación del usuario con círculo
+    let userMarker = null;
+    let userCircle = null;
+    let userLatLng = null;
+    function locateUser() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        userLatLng = [latitude, longitude];
+        if (userMarker) mapParroquias.removeLayer(userMarker);
+        if (userCircle) mapParroquias.removeLayer(userCircle);
+
+        // Círculo para indicar la ubicación
+        userCircle = L.circle(userLatLng, {
+          color: '#4285F4',
+          fillColor: '#4285F4',
+          fillOpacity: 0.35,
+          radius: 18
+        }).addTo(mapParroquias);
+
+        userMarker = L.circleMarker(userLatLng, {
+          radius: 8,
+          color: '#fff',
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          weight: 3
+        }).addTo(mapParroquias).bindPopup("Tu ubicación").openPopup();
+
+        mapParroquias.setView(userLatLng, 15, { animate: true });
+      });
+    }
+
+    // Botón para ubicar usuario (sin cambios)
+    const locateBtn = L.control({position: 'topleft'});
+    locateBtn.onAdd = function(map) {
+      const btn = L.DomUtil.create('button', 'leaflet-bar');
+      btn.title = "Mi ubicación";
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:1.5em;">my_location</span>';
+      btn.style.background = "#fff";
+      btn.style.border = "none";
+      btn.style.width = "38px";
+      btn.style.height = "38px";
+      btn.style.borderRadius = "50%";
+      btn.style.boxShadow = "0 2px 8px #0002";
+      btn.style.cursor = "pointer";
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        locateUser();
+      };
+      return btn;
+    };
+    locateBtn.addTo(mapParroquias);
+
+    // 5. Mostrar coordenadas al mover el mouse
+    const coordsDiv = document.createElement('div');
+    coordsDiv.style.position = "fixed";
+    coordsDiv.style.bottom = "18px";
+    coordsDiv.style.left = "50%";
+    coordsDiv.style.transform = "translateX(-50%)";
+    coordsDiv.style.background = "#fff";
+    coordsDiv.style.padding = "6px 16px";
+    coordsDiv.style.borderRadius = "16px";
+    coordsDiv.style.boxShadow = "0 2px 8px #0002";
+    coordsDiv.style.fontSize = "1em";
+    coordsDiv.style.zIndex = "10000";
+    coordsDiv.style.opacity = "0.93";
+    coordsDiv.style.pointerEvents = "none";
+    coordsDiv.innerText = "Lat, Lng";
+    document.body.appendChild(coordsDiv);
+    mapParroquias.on('mousemove', function(e) {
+      coordsDiv.innerText = `Lat: ${e.latlng.lat.toFixed(5)}, Lng: ${e.latlng.lng.toFixed(5)}`;
+    });
+    mapParroquias.on('mouseout', function() {
+      coordsDiv.innerText = "";
+    });
+    </script>
+</body>
+</html>

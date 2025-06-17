@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Descubrir</title>
+  <link rel="stylesheet" href="allstyle.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    /* ...estilos existentes... */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f6fa;
+      margin: 0;
+      padding-bottom: 70px;
+    }
+    h3 {
+      text-align: center;
+      margin-top: 32px;
+      margin-bottom: 16px;
+      font-size: 1.6em;
+      color: #1f2d3d;
+      letter-spacing: 0.8px;
+      font-weight: 700;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      padding: 16px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      aspect-ratio: 1/1.1;
+      max-width: 160px;
+      margin: 0 auto;
+      min-height: 210px;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+    }
+    .card img {
+      width: 100%;
+      height: 60%;
+      object-fit: cover;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      background-color: #eaeaea;
+      min-height: 80px;
+    }
+    .card-content {
+      padding: 14px 12px 12px 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      background: linear-gradient(0deg, #f8fafc 80%, rgba(255,255,255,0.7) 100%);
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+      box-shadow: 0 1px 0 rgba(31,45,61,0.04);
+      min-height: 70px;
+      overflow: visible;
+      white-space: normal;
+      word-break: break-word;
+    }
+    .card-content h4 {
+      margin: 0 0 6px 0;
+      font-size: 1.08em;
+      color: #1a2636;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 0 #fff;
+    }
+    .card-content p {
+      margin: 0;
+      color: #4a627a;
+      font-size: 0.93em;
+      font-weight: 500;
+      line-height: 1.5;
+      letter-spacing: 0.1px;
+      overflow-wrap: break-word;
+      white-space: normal;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 8;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 3.6em;
+    }
+    .modal-bottom-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      border-top-left-radius: 18px;
+      border-top-right-radius: 18px;
+      box-shadow: 0 -4px 32px rgba(0,0,0,0.18);
+      z-index: 4000;
+      transition: height 0.3s cubic-bezier(.4,1.6,.4,1), transform 0.3s cubic-bezier(.4,1.6,.4,1);
+      display: flex;
+      flex-direction: column;
+      height: 80px;
+      max-height: 92vh;
+      transform: translateY(100%);
+      pointer-events: none;
+      touch-action: none;
+      will-change: height, transform;
+    }
+    .modal-bottom-sheet.active {
+      pointer-events: all;
+      transform: translateY(0);
+    }
+    .modal-drag {
+      width: 100%;
+      height: 32px;
+      background: transparent;
+      position: relative;
+      margin: 0;
+      cursor: grab;
+      touch-action: none;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .modal-drag::before {
+      content: "";
+      display: block;
+      width: 60px;
+      height: 8px;
+      background: #ccc;
+      border-radius: 4px;
+      margin-top: 12px;
+      margin-bottom: 8px;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 14px 14px 0 0;
+      padding: 12px 18px 18px 18px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    #leaflet-map {
+      width: 100%;
+      height: 160px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      margin-left: 1remn;
+      margin-right: 1rem;
+    }
+    .modal-overlay {
+      position: fixed;
+      z-index: 3999;
+      inset: 0;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(6px);
+      transition: opacity 0.3s;
+      opacity: 1;
+      pointer-events: all;
+      display: none;
+    }
+    .modal-overlay.active {
+      display: block;
+      opacity: 1;
+    }
+    .modal-overlay.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .modal-overlay.transparent {
+      background: rgba(255,255,255,1) !important;
+      backdrop-filter: none !important;
+      transition: background 0.3s, backdrop-filter 0.3s, opacity 0.3s;
+    }
+    @media (max-width: 600px) {
+      .modal-bottom-sheet {
+        max-height: 98vh;
+      }
+    }
+    .img-modal-overlay {
+      display: none;
+      position: fixed;
+      z-index: 5000;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.3s;
+    }
+    .img-modal-overlay.active {
+      display: flex;
+    }
+    .img-modal-content {
+      position: relative;
+      max-width: 95vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .img-modal-img {
+      max-width: 90vw;
+      max-height: 70vh;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px #0008;
+      margin-bottom: 18px;
+      background: #fff;
+    }
+    .img-modal-close {
+      position: absolute;
+      top: -18px;
+      right: -18px;
+      background: #fff;
+      color: #222;
+      border: none;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      font-size: 1.8rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #0004;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 10;
+    }
+    .img-modal-close:hover {
+      background: #f44336;
+      color: #fff;
+    }
+    .img-modal-download {
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 22px;
+      font-size: 1.08rem;
+      cursor: pointer;
+      font-weight: 500;
+      box-shadow: 0 2px 8px #0002;
+      transition: background 0.2s;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .img-modal-download:hover {
+      background: #1252a2;
+      color: #fff;
+    }
+    .close-modal {
+      position: absolute;
+      top: 10px;
+      right: 18px;
+      background: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      font-size: 1.8rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #0004;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 10;
+    }
+    .parroquia-label {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.9em;
+      color: #333;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body>
+    <h3 style="text-align:center; margin-top: 32px; margin-bottom: 18px; font-size: 1.5em; color: #2d3a4b; letter-spacing: 1px; font-weight: 700;">
+      Parroquias Urbanas
+    </h3>
+    <div class="card-grid">
+      <div class="card"
+        data-title="El Sagrario"
+        data-desc="Texto identificativo de el Sagrario."
+        data-info="El Sagrario es una de las iglesias más antiguas y representativas de Loja, ubicada en el centro histórico."
+        data-img="Images/unnamed.jpg"
+        data-lat="-3.99300"
+        data-lng="-79.20400">
+        <img src="Images/unnamed.jpg" alt="El Sagrario">
+        <div class="card-content">
+          <h4>El Sagrario</h4>
+          <p>Iglesia emblemática de Loja.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Sucre"
+        data-desc="Calle tradicional y comercial."
+        data-info="La calle Sucre es conocida por su actividad comercial y su arquitectura colonial en el corazón de Loja."
+        data-img="Images/Sucre.jpg"
+        data-lat="-3.99350"
+        data-lng="-79.20350">
+        <img src="Images/Sucre.jpg" alt="Sucre">
+        <div class="card-content">
+          <h4>Sucre</h4>
+          <p>Calle tradicional y comercial.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="El Valle"
+        data-desc="Zona natural y residencial."
+        data-info="El Valle es una zona tranquila de Loja, ideal para disfrutar de la naturaleza y el paisaje."
+        data-img="Images/1000_F_617570430_o7VPTW0yq7PONM1ibbH1WzCJ9W6NLj5T.jpg"
+        data-lat="-3.99500"
+        data-lng="-79.21000">
+        <img src="Images/1000_F_617570430_o7VPTW0yq7PONM1ibbH1WzCJ9W6NLj5T.jpg" alt="El Valle">
+        <div class="card-content">
+          <h4>El Valle</h4>
+          <p>Zona natural y residencial.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="San Sebastián"
+        data-desc="Plaza histórica de Loja."
+        data-info="La Plaza de San Sebastián es un lugar histórico y cultural, punto de encuentro de los lojanos."
+        data-img="Images/san_sebastian.jpg"
+        data-lat="-3.99420"
+        data-lng="-79.20700">
+        <img src="Images/san_sebastian.jpg" alt="San Sebastián">
+        <div class="card-content">
+          <h4>San Sebastián</h4>
+          <p>Plaza histórica de Loja.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Punzara"
+        data-desc="Mirador natural de Loja."
+        data-info="Punzara es un mirador natural desde donde se puede observar toda la ciudad de Loja."
+        data-img="Images/punzara.jpg" 
+        data-lat="-3.99000"
+        data-lng="-79.21500">
+        <img src="Images/punzara.jpg" alt="Punzara">
+        <div class="card-content">
+          <h4>Punzara</h4>
+          <p>Mirador natural de Loja.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Carigan"
+        data-desc="Parroquia rural de Loja."
+        data-info="Carigan es una parroquia rural de Loja, famosa por su entorno natural y tradiciones."
+        data-img=""
+        data-lat="-3.98000"
+        data-lng="-79.22000">
+        <img src="Images/carigan.jpg" alt="Carigan">
+        <div class="card-content">
+          <h4>Carigan</h4>
+          <p>Parroquia rural de Loja.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="text-align:center; margin-top: 24px; margin-bottom: 10px; font-size: 1.5em; color: #2d3a4b; letter-spacing: 1px; font-weight: 700;">
+      Parroquias Rurales
+    </h3>
+    <div class="card-grid">
+      <div class="card"
+        data-title="Chantaco"
+        data-desc="Parroquia agrícola y ganadera."
+        data-info="Chantaco es conocida por su producción agrícola, especialmente de caña de azúcar y café, y por sus hermosos paisajes rurales."
+        data-img="Images/chantacoc.jpg"
+        data-lat="-3.82200"
+        data-lng="-79.32300">
+        <img src="Images/chantacoc.jpg" alt="Chantaco">
+        <div class="card-content">
+          <h4>Chantaco</h4>
+          <p>Parroquia agrícola y ganadera.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Chuquiribamba"
+        data-desc="Parroquia tradicional de Loja."
+        data-info="Chuquiribamba destaca por su arquitectura colonial, fiestas religiosas y su entorno natural de montañas y ríos."
+        data-img="Images/chuquiribambac.jpg"
+        data-lat="-3.98300"
+        data-lng="-79.44900">
+        <img src="Images/chuquiribambac.jpg" alt="Chuquiribamba">
+        <div class="card-content">
+          <h4>Chuquiribamba</h4>
+          <p>Parroquia tradicional de Loja.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="El Cisne"
+        data-desc="Centro religioso nacional."
+        data-info="El Cisne es famoso por el Santuario de la Virgen de El Cisne, destino de peregrinaciones religiosas de todo el país."
+        data-img="Images/cisnec.jpg"
+        data-lat="-3.73200"
+        data-lng="-79.37400">
+        <img src="Images/cisnec.jpg" alt="El Cisne">
+        <div class="card-content">
+          <h4>El Cisne</h4>
+          <p>Centro religioso nacional.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Gualel"
+        data-desc="Parroquia de naturaleza y agricultura."
+        data-info="Gualel es reconocida por su producción agrícola y ganadera, así como por sus paisajes montañosos y clima fresco."
+        data-img="Images/gualelc.jpg"
+        data-lat="-3.84500"
+        data-lng="-79.18400">
+        <img src="Images/gualelc.jpg" alt="Gualel">
+        <div class="card-content">
+          <h4>Gualel</h4>
+          <p>Naturaleza y agricultura.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Jimbilla"
+        data-desc="Puerta de entrada al Parque Nacional Podocarpus."
+        data-info="Jimbilla es conocida por su cercanía al Parque Nacional Podocarpus, su clima templado y su producción de frutas."
+        data-img="Images/jimbilla.jpg"
+        data-lat="-3.99300"
+        data-lng="-79.20400">
+        <img src="Images/jimbilla.jpg" alt="Jimbilla">
+        <div class="card-content">
+          <h4>Jimbilla</h4>
+          <p>Entrada al Parque Podocarpus.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Malacatos"
+        data-desc="Valle turístico y agrícola."
+        data-info="Malacatos es famoso por su clima cálido, producción de caña de azúcar y frutas, y por ser un destino turístico de descanso."
+        data-img="Images/malacatosc.jpg"
+        data-lat="-3.99700"
+        data-lng="-79.20400">
+        <img src="Images/malacatosc.jpg" alt="Malacatos">
+        <div class="card-content">
+          <h4>Malacatos</h4>
+          <p>Valle turístico y agrícola.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Quinara"
+        data-desc="Parroquia agrícola y ganadera."
+        data-info="Quinara es conocida por su producción de café, caña de azúcar y ganado, además de su ambiente tranquilo y paisajes verdes."
+        data-img="Images/quinarac.jpg"
+        data-lat="-4.16800"
+        data-lng="-79.22300">
+        <img src="Images/quinarac.jpg" alt="Quinara">
+        <div class="card-content">
+          <h4>Quinara</h4>
+          <p>Agricultura y ganadería.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="San Lucas"
+        data-desc="Parroquia de cultura Saraguro."
+        data-info="San Lucas es reconocida por su población indígena Saraguro, tradiciones ancestrales y paisajes andinos."
+        data-img="Images/snlucasc.jpg"
+        data-lat="-3.78100"
+        data-lng="-79.23700">
+        <img src="Images/snlucasc.jpg" alt="San Lucas">
+        <div class="card-content">
+          <h4>San Lucas</h4>
+          <p>Cultura Saraguro y tradiciones.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="San Pedro de Vilcabamba"
+        data-desc="Parroquia de naturaleza y tranquilidad."
+        data-info="San Pedro de Vilcabamba es ideal para el ecoturismo, con ríos, montañas y un ambiente apacible."
+        data-img="Images/vilcac3.jpg"
+        data-lat="-4.22200"
+        data-lng="-79.24600">
+        <img src="Images/vilcac3.jpg" alt="San Pedro de Vilcabamba">
+        <div class="card-content">
+          <h4>Vilcabamba</h4>
+          <p>Naturaleza y tranquilidad.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Santiago"
+        data-desc="Parroquia rural de Loja."
+        data-info="Santiago es una parroquia rural con actividades agrícolas y ganaderas, rodeada de montañas y ríos."
+        data-img="Images/santiagoc1.jpg"
+        data-lat="-4.01300"
+        data-lng="-79.32800">
+        <img src="Images/santiagoc1.jpg" alt="Santiago">
+        <div class="card-content">
+          <h4>Santiago</h4>
+          <p>Rural, agrícola y ganadera.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Taquil"
+        data-desc="Parroquia de paisajes andinos."
+        data-info="Taquil es conocida por sus paisajes montañosos, agricultura y tradiciones culturales."
+        data-img="Images/taquilc1.jpg"
+        data-lat="-4.01300"
+        data-lng="-79.27300">
+        <img src="Images/taquilc1.jpg" alt="Taquil">
+        <div class="card-content">
+          <h4>Taquil</h4>
+          <p>Paisajes andinos y cultura.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Vilcabamba"
+        data-desc="Valle de la longevidad."
+        data-info="Vilcabamba es famoso internacionalmente por la longevidad de sus habitantes, su clima agradable y su belleza natural."
+        data-img="Images/vilcac3.jpg"
+        data-lat="-4.26200"
+        data-lng="-79.22000">
+        <img src="Images/vilcac3.jpg" alt="Vilcabamba">
+        <div class="card-content">
+          <h4>Vilcabamba</h4>
+          <p>Valle de la longevidad.</p>
+        </div>
+      </div>
+      <div class="card"
+        data-title="Yangana"
+        data-desc="Parroquia agrícola y ganadera."
+        data-info="Yangana es una parroquia rural con producción agrícola, ganadera y hermosos paisajes de montaña."
+        data-img="Images/yanganac.jpg"
+        data-lat="-4.31600"
+        data-lng="-79.21700">
+        <img src="Images/yanganac.jpg" alt="Yangana">
+        <div class="card-content">
+          <h4>Yangana</h4>
+          <p>Agricultura y ganadería.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bottom-sheet" id="modalSheet">
+      <div class="modal-drag"></div>
+      <div class="modal-content" id="modalContent"></div>
+    </div>
+    <div id="modalOverlay" class="modal-overlay hide"></div>
+    <nav class="nav-bottom">
+      <a href="index.html" class="nav-item active">
+        <span class="material-symbols-outlined">home</span>
+        <span class="nav-label">Inicio</span>
+      </a>
+      <a href="ubicación.html" class="nav-item">
+        <span class="material-symbols-outlined">location_on</span>
+        <span class="nav-label">Ubicación</span>
+      </a>
+      <a href="" class="nav-item">
+        <span class="material-symbols-outlined">explore</span>
+        <span class="nav-label">Parroquias para Descubrir</span>
+      </a>
+    </nav>
+    <div id="imgModal" class="img-modal-overlay">
+      <div class="img-modal-content">
+        <button class="img-modal-close" id="closeImgModal" aria-label="Cerrar imagen">&times;</button>
+        <img src="" alt="Imagen ampliada" class="img-modal-img" id="imgModalImg" />
+        <a id="downloadImgBtn" class="img-modal-download" download target="_blank" title="Descargar">
+          <span class="material-symbols-outlined" style="font-size:1.6em;vertical-align:middle;">download</span>
+        </a>
+      </div>
+    </div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+      // --- MODAL DE CARDS ---
+      const cards = document.querySelectorAll('.card');
+      const modal = document.getElementById('modalSheet');
+      const modalContent = document.getElementById('modalContent');
+      const drag = document.querySelector('.modal-drag');
+      const overlay = document.getElementById('modalOverlay');
+      let leafletMap = null;
+      let leafletPolygon = null;
+      let modalState = 'closed';
+      let startY = 0, currentY = 0, dragging = false, lastDiff = 0, startHeight = 0;
+
+      // Actividades y fotos por parroquia (puedes ampliar)
+      const actividadesPorLugar = {
+        "El Sagrario": [
+          "Museo de la Cultura Lojana.",
+          "Puerta de la ciudad",
+          "Catedral"
+        ],
+        "Sucre": [
+          "Recorrido por tiendas y comercios.",
+          "Degustación de gastronomía local.",
+          "Paseo por la arquitectura colonial."
+        ],
+        "El Valle": [
+          "Senderismo y caminatas.",
+          "Observación de aves.",
+          "Picnic en áreas verdes."
+        ],
+        "San Sebastián": [
+          "Visita a la plaza histórica.",
+          "Eventos culturales y ferias.",
+          "Fotografía urbana."
+        ],
+        "Punzara": [
+          "Mirador panorámico.",
+          "Caminatas ecológicas.",
+          "Observación de la ciudad."
+        ],
+        "Carigan": [
+          "Exploración de la naturaleza.",
+          "Visita a comunidades rurales.",
+          "Participación en festividades locales."
+        ],
+        "Chantaco": [
+          "Visita a fincas agrícolas.",
+          "Degustación de caña de azúcar y café.",
+          "Caminatas por paisajes rurales."
+        ],
+        "Chuquiribamba": [
+          "Recorrido por arquitectura colonial.",
+          "Participación en fiestas religiosas.",
+          "Senderismo en montañas y ríos."
+        ],
+        "El Cisne": [
+          "Visita al Santuario de la Virgen.",
+          "Participación en peregrinaciones.",
+          "Compra de recuerdos religiosos."
+        ],
+        "Gualel": [
+          "Exploración de paisajes montañosos.",
+          "Visita a fincas ganaderas.",
+          "Disfrute del clima fresco."
+        ],
+        "Jimbilla": [
+          "Entrada al Parque Nacional Podocarpus.",
+          "Caminatas ecológicas.",
+          "Degustación de frutas locales."
+        ],
+        "Malacatos": [
+          "Visita a plantaciones de caña y frutas.",
+          "Descanso en hosterías.",
+          "Paseos por el valle."
+        ],
+        "Quinara": [
+          "Recorrido por cafetales.",
+          "Observación de ganado.",
+          "Disfrute de paisajes verdes."
+        ],
+        "San Lucas": [
+          "Convivencia con la cultura Saraguro.",
+          "Participación en tradiciones ancestrales.",
+          "Caminatas por paisajes andinos."
+        ],
+        "San Pedro de Vilcabamba": [
+          "Ecoturismo en ríos y montañas.",
+          "Observación de flora y fauna.",
+          "Relajación en ambiente apacible."
+        ],
+        "Santiago": [
+          "Actividades agrícolas y ganaderas.",
+          "Caminatas por montañas y ríos.",
+          "Visita a comunidades rurales."
+        ],
+        "Taquil": [
+          "Exploración de paisajes andinos.",
+          "Participación en tradiciones culturales.",
+          "Visita a zonas agrícolas."
+        ],
+        "Vilcabamba": [
+          "Senderismo en el valle.",
+          "Visita a centros de longevidad.",
+          "Disfrute de la belleza natural."
+        ],
+        "Yangana": [
+          "Recorridos agrícolas y ganaderos.",
+          "Caminatas por paisajes de montaña.",
+          "Fotografía de naturaleza."
+        ]
+      };
+
+      const imagenesPorLugar = {
+        "El Sagrario": [
+          "Images/unnamed.jpg"
+        ],
+        "Sucre": [
+          "Images/Sucre.jpg"
+        ],
+        "El Valle": [
+          "Images/1000_F_617570430_o7VPTW0yq7PONM1ibbH1WzCJ9W6NLj5T.jpg"
+        ],
+        "San Sebastián": [
+          "Images/san_sebastian.jpg"
+        ],
+        "Punzara": [
+          "Images/punzara.jpg"
+        ],
+        "Carigan": [
+          "Images/carigan.jpg"
+        ],
+        "Chantaco": [
+          "Images/chantacoc.jpg",
+          "Images/chantacoc2.jpg"
+        ],
+        "Chuquiribamba": [
+          "Images/chuquiribambac.jpg",
+          "Images/chuquiribambac2.jpg"
+        ],
+        "El Cisne": [
+          "Images/cisnec.jpg",
+          "Images/cisnec2.jpg"
+        ],
+        "Gualel": [
+          "Images/gualelc.jpg",
+          "Images/gualelc2.jpg"
+        ],
+        "Jimbilla": [
+          "Images/jimbilla.jpg",
+          "Images/jimbilla2.jpg"
+        ],
+        "Malacatos": [
+          "Images/malacatosc.jpg",
+          "Images/malacatosc2.jpg"
+        ],
+        "Quinara": [
+          "Images/quinarac.jpg",
+          "Images/quinarac2.jpg"
+        ],
+        "San Lucas": [
+          "Images/snlucasc.jpg",
+          "Images/snlucasc2.jpg"
+        ],
+        "San Pedro de Vilcabamba": [
+          "Images/vilcac3.jpg",
+          "Images/vilcac32.jpg"
+        ],
+        "Santiago": [
+          "Images/santiagoc1.jpg",
+          "Images/santiagoc2.jpg"
+        ],
+        "Taquil": [
+          "Images/taquilc1.jpg",
+          "Images/taquilc2.jpg"
+        ],
+        "Vilcabamba": [
+          "Images/vilcac3.jpg",
+          "Images/vilcac32.jpg"
+        ],
+        "Yangana": [
+          "Images/yanganac.jpg",
+          "Images/yanganac2.jpg"
+        ]
+      };
+
+      const style = document.createElement('style');
+      style.innerHTML = `
+        .carousel-container {
+          position: relative;
+          width: 100%;
+          max-height: 200px;
+          margin-bottom: 10px;
+          overflow: hidden;
+          border-radius: 12px;
+          background: #eaeaea;
+        }
+        .carousel-slide {
+          display: none;
+          width: 100%;
+          height: 200px;
+          object-fit: cover;
+          border-radius: 12px;
+        }
+        .carousel-slide.active {
+          display: block;
+        }
+        .carousel-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background: rgba(44,62,80,0.7);
+          color: #fff;
+          border: none;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          cursor: pointer;
+          z-index: 2;
+          font-size: 1.5em;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0.8;
+        }
+        .carousel-btn.left { left: 8px; }
+        .carousel-btn.right { right: 8px; }
+      `;
+      document.head.appendChild(style);
+
+      cards.forEach(card => {
+        card.addEventListener('click', () => {
+          const title = card.getAttribute('data-title');
+          const desc = card.getAttribute('data-desc');
+          const info = card.getAttribute('data-info');
+          const lat = card.getAttribute('data-lat');
+          const lng = card.getAttribute('data-lng');
+          const actividades = actividadesPorLugar[title] || ["Consulta en la localidad por actividades disponibles."];
+          const imagenes = imagenesPorLugar[title] || [card.getAttribute('data-img')];
+
+          let carouselHtml = `
+            <div class="carousel-container">
+              ${imagenes.map((img, idx) => `
+                <img src="${img}" class="carousel-slide${idx === 0 ? ' active' : ''}" alt="Imagen de ${title}">
+              `).join('')}
+              ${imagenes.length > 1 ? `
+                <button class="carousel-btn left" aria-label="Imagen anterior">&#10094;</button>
+                <button class="carousel-btn right" aria-label="Siguiente imagen">&#10095;</button>
+              ` : ''}
+            </div>
+            <h4 style="margin: 12px 0 8px 0; font-size: 1.2em; color: #2d3a4b;">${title}</h4>
+            <p style="margin: 0; color: #4a627a; font-size: 0.95em; line-height: 1.4;">${desc}</p>
+            <div id="leaflet-map" style="width:100%;height:180px;border-radius:12px;margin:14px 0 10px 0;"></div>
+            <h5 style="margin-top: 16px; font-size: 1.1em; color: #2d3a4b;">Actividades:</h5>
+            <ul style="margin: 0; padding-left: 20px; color: #4a627a; font-size: 0.9em; line-height: 1.6;">
+              ${actividades.map(act => `<li style="margin-bottom: 4px;">${act}</li>`).join('')}
+            </ul>
+          `;
+
+          modalContent.innerHTML = carouselHtml;
+          modal.classList.add('active');
+          modalState = 'medium';
+          modal.style.height = '85vh';
+          overlay.classList.add('active');
+          overlay.classList.remove('hide');
+          document.body.style.overflow = 'hidden';
+
+          setTimeout(() => {
+            if (leafletMap) {
+              leafletMap.remove();
+              leafletMap = null;
+            }
+            leafletMap = L.map('leaflet-map').setView([lat, lng], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 19,
+              attribution: '© OpenStreetMap'
+            }).addTo(leafletMap);
+
+            // Marcador circular para la parroquia
+            L.circleMarker([lat, lng], {
+              radius: 10,
+              color: '#4285F4',
+              fillColor: '#4285F4',
+              fillOpacity: 0.7,
+              weight: 2
+            }).addTo(leafletMap).bindTooltip(title, {permanent: true, direction: "top", className: "parroquia-label"});
+          }, 200);
+
+          // Carousel funcionalidad
+          if (imagenes.length > 1) {
+            let current = 0;
+            const slides = () => modalContent.querySelectorAll('.carousel-slide');
+            const leftBtn = modalContent.querySelector('.carousel-btn.left');
+            const rightBtn = modalContent.querySelector('.carousel-btn.right');
+            const showSlide = idx => {
+              slides().forEach((img, i) => img.classList.toggle('active', i === idx));
+            };
+            showSlide(current);
+            leftBtn.onclick = () => {
+              current = (current - 1 + imagenes.length) % imagenes.length;
+              showSlide(current);
+            };
+            rightBtn.onclick = () => {
+              current = (current + 1) % imagenes.length;
+              showSlide(current);
+            };
+          }
+        });
+      });
+
+      // Modal cerrar y drag
+      function cerrarModal() {
+        modal.classList.remove('active');
+        overlay.classList.remove('active');
+        overlay.classList.add('hide');
+        document.body.style.overflow = '';
+        modal.style.height = '';
+        modalState = 'closed';
+        if (leafletMap) {
+          leafletMap.remove();
+          leafletMap = null;
+        }
+      }
+      overlay.onclick = cerrarModal;
+
+      drag.addEventListener('touchstart', e => {
+        if (modalState === 'closed') return;
+        dragging = true;
+        startY = e.touches[0].clientY;
+        startHeight = modal.offsetHeight;
+        modal.style.transition = 'none';
+      });
+      drag.addEventListener('touchmove', e => {
+        if (!dragging) return;
+        currentY = e.touches[0].clientY;
+        let diff = currentY - startY;
+        let newHeight = startHeight - diff;
+        let maxH = window.innerHeight * 0.92;
+        let minH = 80;
+        if (newHeight > maxH) newHeight = maxH;
+        if (newHeight < minH) newHeight = minH;
+        modal.style.height = newHeight + 'px';
+        lastDiff = diff;
+      });
+      drag.addEventListener('touchend', e => {
+        if (!dragging) return;
+        dragging = false;
+        modal.style.transition = '';
+        let vh = window.innerHeight;
+        let h = modal.offsetHeight;
+        if (h < vh * 0.5) {
+          cerrarModal();
+        } else if (h > vh * 0.7) {
+          modal.style.height = '92vh';
+          modalState = 'expanded';
+        } else {
+          modal.style.height = '70vh';
+          modalState = 'medium';
+        }
+      });
+      drag.addEventListener('mousedown', e => {
+        if (modalState === 'closed') return;
+        dragging = true;
+        startY = e.clientY;
+        startHeight = modal.offsetHeight;
+        modal.style.transition = 'none';
+        document.body.style.userSelect = 'none';
+      });
+      window.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        currentY = e.clientY;
+        let diff = currentY - startY;
+        let newHeight = startHeight - diff;
+        let maxH = window.innerHeight * 0.92;
+        let minH = 80;
+        if (newHeight > maxH) newHeight = maxH;
+        if (newHeight < minH) newHeight = minH;
+        modal.style.height = newHeight + 'px';
+        lastDiff = diff;
+      });
+      window.addEventListener('mouseup', e => {
+        if (!dragging) return;
+        dragging = false;
+        modal.style.transition = '';
+        document.body.style.userSelect = '';
+        let vh = window.innerHeight;
+        let h = modal.offsetHeight;
+        if (h < vh * 0.5) {
+          cerrarModal();
+        } else if (h > vh * 0.7) {
+          modal.style.height = '92vh';
+          modalState = 'expanded';
+        } else {
+          modal.style.height = '70vh';
+          modalState = 'medium';
+        }
+      });
+
+      // Imagen modal
+      document.addEventListener('click', function(e) {
+        if (
+          modal.classList.contains('active') &&
+          e.target.classList.contains('carousel-slide')
+        ) {
+          const src = e.target.getAttribute('src');
+          const alt = e.target.getAttribute('alt') || "Imagen ampliada";
+          document.getElementById('imgModalImg').src = src;
+          document.getElementById('imgModalImg').alt = alt;
+          const downloadBtn = document.getElementById('downloadImgBtn');
+          downloadBtn.href = src;
+          downloadBtn.setAttribute('download', alt.replace(/\s+/g, '_').toLowerCase());
+          document.getElementById('imgModal').classList.add('active');
+        }
+      });
+      document.getElementById('closeImgModal').onclick = function() {
+        document.getElementById('imgModal').classList.remove('active');
+      };
+      document.getElementById('imgModal').onclick = function(e) {
+        if (e.target === this) {
+          this.classList.remove('active');
+        }
+      };
+    </script>
+</body>
+</html>

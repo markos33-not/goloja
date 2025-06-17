@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lugares</title>
+  <link rel="stylesheet" href="allstyle.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" rel="stylesheet" />
+  <style>
+    body {
+      background: #f4f4f6;
+      color: #222;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      padding: 0;
+      margin: 0;
+    }
+    .category-filter {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      margin: 20px 0 0 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      background: #f4f4f600;
+      box-shadow: 0 2px 8px #0001;
+      padding-top: 6px;
+      padding-bottom: 6px;
+      transition: box-shadow 0s, background 0.3s, transform 0.3s;
+    }
+    .category-filter.stuck {
+      background: #00000000;
+      transform: scale(1.02) translateY(-4px);
+    }
+    .filter-btn {
+      align-self: center;
+      background: #222;
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+      width: 350px;
+      justify-content: center;
+      box-shadow: 0 2px 8px #0002;
+    }
+    .filter-btn:hover {
+      background: #444;
+    }
+    .filter-options {
+      align-self: center;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+      opacity: 1;
+      transition: opacity 0.4s, transform 0.4s;
+      transform: scale(1);
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 2px 12px #0002;
+      padding: 12px 0;
+      width: 350px;
+      z-index: 2;
+      position: absolute;
+      top: 50px;
+    }
+    .filter-options.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.7) translateY(-10px);
+    }
+    .cat-btn {
+      background: #f4f4f6;
+      border: none;
+      color: #222;
+      border-radius: 16px;
+      padding: 10px 18px 10px 14px;
+      cursor: pointer;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.2s, color 0.2s;
+      width: 95%;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .cat-btn:hover, .cat-btn.active {
+      background: #222;
+      color: #fff;
+    }
+    .cat-icon {
+      font-size: 1.3em;
+      vertical-align: middle;
+      color: #888;
+      transition: color 0.2s;
+    }
+    .cat-btn.active .cat-icon,
+    .cat-btn:hover .cat-icon {
+      color: #fff;
+    }
+    .lugares-container {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      margin: 30px auto 0 auto;
+      max-width: 600px;
+      width: 100%;
+      padding-bottom: 80px;
+    }
+    .lugar-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px #0001;
+      padding: 0 0 20px 0;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      overflow: hidden;
+    }
+    .carousel {
+      width: 100%;
+      position: relative;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #eee;
+      min-height: 220px;
+    }
+    .carousel-prev, .carousel-next {
+      background: #e0e0e0cc;
+      border: none;
+      color: #222;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      font-size: 1.5em;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.85;
+      box-shadow: 0 2px 8px #0002;
+    }
+    .carousel-prev {
+      left: 16px;
+    }
+    .carousel-next {
+      right: 16px;
+    }
+    .carousel-prev:hover, .carousel-next:hover {
+      background: #222;
+      color: #fff;
+    }
+    .lugar-img {
+      width: 90%;
+      height: 260px;
+      object-fit: cover;
+      border-radius: 20px;
+      background: #e0e0e0;
+      display: block;
+      margin: 0;
+      transition: box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .lugar-info {
+      flex: 1;
+      min-width: 0;
+      padding: 18px 18px 0 18px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .lugar-title {
+      font-size: 1.18rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #222;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      letter-spacing: 0.5px;
+    }
+    .lugar-desc {
+      font-size: 1.01rem;
+      margin-bottom: 10px;
+      color: #4a627a;
+      background: #f7f7fa;
+      border-left: 4px solid #bdbdbd;
+      border-radius: 6px;
+      padding: 8px 12px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .maps-btn {
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 2px;
+    }
+    .maps-btn:hover {
+      background: #444;
+    }
+    .search-container {
+      position: relative;
+      max-width: 340px;
+      width: 100%;
+      margin-top: 0%;
+      display: flex;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #buscador {
+      width: 100%;
+      padding: 12px 40px 12px 16px;
+      border-radius: 24px;
+      border: none;
+      background: #fff;
+      font-size: 1rem;
+      color: #222;
+      box-shadow: 0 2px 8px #0001;
+      outline: none;
+      border: 1px solid #ccc;
+    }
+    .lugar-mas-info {
+      display: none;
+      font-size: 0.99rem;
+      color: #4a627a;
+      background: #e9f0fa;
+      border-left: 4px solid #222;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      margin-top: 2px;
+      animation: fadeIn 0.3s;
+      box-shadow: 0 1px 6px #1976d210;
+      line-height: 1.5;
+    }
+    .lugar-mas-info.visible {
+      display: block;
+    }
+    .lugar-actividades-info {
+      display: none;
+      font-size: 0.99rem;
+      color: #4a627a;
+      background: #e9f0fa;
+      border-left: 4px solid #222;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      margin-top: 2px;
+      animation: fadeIn 0.3s;
+      box-shadow: 0 1px 6px #1976d210;
+      line-height: 1.5;
+    }
+    .lugar-actividades-info.visible {
+      display: block;
+    }
+    .ver-mas-btn {
+      background: #e0e0e0;
+      color: #222;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      margin-bottom: 6px;
+      margin-top: 0;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+    .ver-mas-btn.active {
+      background: #222;
+      color: #fff;
+    }
+    .actividades-btn {
+      background: #e0e0e0;
+      color: #222;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+    .actividades-btn.active {
+      background: #222;
+      color: #fff;
+    }
+    .ver-mas-btn,
+    .maps-btn,
+    .actividades-btn {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+    }
+    .lugar-card .lugar-info > div.botones-centrados {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 8px;
+      width: 100%;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    @media (max-width: 800px) {
+      .lugares-container, .category-filter {
+        max-width: 100vw;
+      }
+      .lugar-card {
+        border-radius: 0;
+      }
+      .lugar-img {
+        height: 230px;
+        border-radius: 20px;
+      }
+    }
+    @media (max-width: 600px) {
+      .lugares-container, .category-filter {
+        max-width: 100vw;
+      }
+      .lugar-card {
+        border-radius: 0;
+      }
+      .lugar-img {
+        height: 230px;
+        border-radius: 20px;
+      }
+      .lugar-info {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+      .carousel-prev, .carousel-next {
+        width: 32px;
+        height: 32px;
+        font-size: 1.2em;
+      }
+    }
+    .img-modal-overlay {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.3s;
+    }
+    .img-modal-overlay.active {
+      display: flex;
+    }
+    .img-modal-content {
+      position: relative;
+      max-width: 95vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .img-modal-img {
+      max-width: 96vw;
+      max-height: 70vh;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px #0008;
+      margin-bottom: 18px;
+    }
+    .img-modal-close {
+      position: absolute;
+      top: -18px;
+      right: -18px;
+      background: #fff;
+      color: #222;
+      border: none;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      font-size: 1.8rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #0004;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .img-modal-close:hover {
+      background: #f44336;
+      color: #fff;
+    }
+    .img-modal-download {
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 22px;
+      font-size: 1.08rem;
+      cursor: pointer;
+      font-weight: 500;
+      box-shadow: 0 2px 8px #0002;
+      transition: background 0.2s;
+    }
+    .img-modal-download:hover {
+      background: #ffffff;
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-bottom">
+    <a href="index.html" class="nav-item active">
+      <span class="material-symbols-outlined">home</span>
+      <span class="nav-label">Inicio</span>
+    </a>
+    <a href="ubicación.html" class="nav-item">
+      <span class="material-symbols-outlined">location_on</span>
+      <span class="nav-label">Ubicación</span>
+    </a>
+    <a href="descubrir.html" class="nav-item">
+      <span class="material-symbols-outlined">explore</span>
+      <span class="nav-label">Parroquias para Descubrir</span>
+    </a>
+
+  </nav>
+
+  <main>
+    <br>
+    <div class="search-container">
+      <input type="text" id="buscador" placeholder="Buscar" autocomplete="off" />
+    </div>
+    <div class="category-filter">
+      <button id="toggleFilter" class="filter-btn">
+        <span class="material-symbols-outlined">filter_alt</span>
+      </button>
+      <div id="filterOptions" class="filter-options hidden">
+        <button class="cat-btn" data-category="ninguno">
+          <span class="material-symbols-outlined cat-icon" style="font-variation-settings: 'FILL' 1;">Delete</span>
+          Eliminar filtro
+        </button>
+        <button class="cat-btn" data-category="parques">
+          <span class="material-symbols-outlined cat-icon" style="font-variation-settings: 'FILL' 1;">park</span>
+          Parques
+        </button>
+        <button class="cat-btn" data-category="iglesias">
+          <span class="material-symbols-outlined cat-icon" style="font-variation-settings: 'FILL' 1;">church</span>
+          Iglesias
+        </button>
+        <button class="cat-btn" data-category="museos">
+          <span class="material-symbols-outlined cat-icon" style="font-variation-settings: 'FILL' 1;">museum</span>
+          Museos
+        </button>
+        <button class="cat-btn" data-category="monumentos">
+          <span class="material-symbols-outlined cat-icon" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+          Monumentos
+        </button>
+        <button class="cat-btn" data-category="plazas">
+          <span class="material-symbols-outlined cat-icon" style="font-variation-settings: 'FILL' 1;">location_city</span>
+          Plazas
+        </button>
+      </div>
+    </div>
+    <div id="lugaresContainer" class="lugares-container"></div>
+  </main>
+
+  <div id="imgModal" class="img-modal-overlay">
+    <div class="img-modal-content">
+      <button class="img-modal-close" id="closeImgModal" aria-label="Cerrar imagen">&times;</button>
+      <img src="" alt="Imagen ampliada" class="img-modal-img" id="imgModalImg" />
+      <a id="downloadImgBtn" class="img-modal-download" download target="_blank" title="Descargar">
+        <span class="material-symbols-outlined" style="font-size:1.6em;vertical-align:middle;">download</span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+const lugares = [
+  {
+    nombre: "Basílica de la Virgen del Cisne",
+    categoria: "iglesias",
+    descripcion: "Imponente templo gótico peregrinado cada agosto.",
+    imagenes: [
+      "images/basilica_virgen_cisne.jpg",
+      "images/basilica_virgen_cisne2.jpg"
+    ],
+    lat: -3.8520273640781855,
+    lng: -79.42608179907411,
+    infoExtra: "Destino de peregrinación, alberga la imagen de la Virgen del Cisne.",
+    actividades: ["Turismo religioso", "Fotografía", "Peregrinación"]
+  },
+  {
+    nombre: "Parque Nacional Podocarpus",
+    categoria: "parques",
+    descripcion: "Reserva de megadiversidad entre páramo y bosque nublado.",
+    imagenes: [
+      "images/podocarpus.jpg",
+      "images/podocarpus2.jpg",
+      "images/podocarpus3.jpg"
+    ],
+    lat: -4.083466,
+    lng: -79.205463,
+    infoExtra: "Lagunas, orquideario y senderos ecológicos.",
+    actividades: ["Senderismo", "Avistamiento de aves", "Camping"]
+  },
+  {
+    nombre: "Museo de la Cultura Lojana",
+    categoria: "museos",
+    descripcion: "Museo en una casa patrimonial del siglo XVIII que exhibe arte, arqueología y etnografía local.",
+    imagenes: [
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL8.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL2.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL1.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL3.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL4.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL5.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL6.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL7.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL9.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL10.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL11.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL12.jpg",
+      "el_sagrario/museo_de_la_cultura_lojana/museoCL13.jpg"
+    ],
+    lat: -3.997285, 
+    lng: -79.201559,
+    infoExtra: "La Plaza Central de Loja es uno de sus espacios públicos más importantes, rodeada de atractivos como el Museo Arqueológico, la iglesia Catedral, y el Museo Matilde Hidalgo de Procel. En el centro de la Plaza se encuentra una escultura de Bernardo Valdivieso, que fuera benefactor del colegio Bernardo Valdivieso. Aquí se realizan las manifestaciones de religioso cívico y político, a su alrededor se encuentran las edificaciones de gobierno como: Municipalidad, Gobernación de la Provincia, Consejo Provincial, Casa Episcopal, Museo del Banco Central del Ecuador; cercano al parque se cuenta con instituciones bancarias y comerciales que son indicadores de una ciudad progresista.",
+    actividades: [
+      "Explorar salas temáticas",
+      "Fotografía histórica",
+      "Talleres y eventos culturales"
+    ]
+  },
+  {
+    nombre: "Iglesia de Santo Domingo de Guzmán",
+    categoria: "iglesias",
+    descripcion: "Iglesia colonial con retablos y altar mayor.",
+    imagenes: [
+      "images/iglesia_santo_domingo.jpg"
+    ],
+    lat: -3.9989115,
+    lng: -79.2016965,
+    infoExtra: "Arquitectura barroca, retablos dorados y arte religioso.",
+    actividades: [
+      "Historia religiosa", 
+      "Fotografía", 
+      "Arquitectura"
+    ]
+  },
+  {
+    nombre: "Iglesia Catolica La Catedral",
+    categoria: "iglesias",
+    descripcion: "Templo histórico y religioso ubicado en el centro de la ciudad, conocido por su arquitectura neoclásica y su importancia cultural.",
+    imagenes: [
+      "images/catedral_loja.jpg"
+    ],
+    lat: -3.9989115,
+    lng: -79.2016965,
+    infoExtra: "La Iglesia Catedral de Loja se localiza en el centro de la ciudad de Loja frente al parque Central de Loja. Es una de las Iglesias más grandes del Ecuador. Es de estilo ecléctico, con elementos historicistas, neoclásicos y corintios.La catedral con su singular estilo arquitectónico, su baldaquino y coros tallados en madera, recibe todos los años a la Virgen del Cisne. <br> La catedral es una iglesia que está conformada por tres naves, es de estilo semi gótico y componen su fachada cuatro cuerpos rematados por una torre y su campanario.<br>Siendo esta la Iglesia Matriz, aquí se recibe cada 20 de Agosto a la Imagen de la Virgen de El Cisne, que es traída en romería desde la Basílica de El Cisne.",
+    actividades: [
+      "Cambiar", 
+      "Cambiar", 
+      "Cambiar"
+    ]
+  },
+  {
+    nombre: "Museo de Madres Conceptas",
+    categoria: "museos",
+    descripcion: "Convento colonial convertido en museo religioso.",
+    imagenes: [
+      "el_sagrario/Museo Madres Conceptas/MMC2.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC1.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC3.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC4.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC5.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC6.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC7.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC8.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC9.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC10.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC11.jpg",
+      "el_sagrario/Museo Madres Conceptas/MMC12.jpg",
+
+    ],
+    lat: -4.0074,
+    lng: -79.2070,
+    infoExtra: "En este espacio resalta el tradicional Museo, en donde se conserva al menos unos 70 cuadros de carácter religioso, esculturas, trajes de la liturgia de hace unos 60 años atrás, que se han convertido en la atracción de cientos de turistas de Loja, Ecuador y el mundo. <br>Recorrer el Monasterio es reencontrarse con el pasado. Un salto a la historia para recordar y revivir. Se ubica a pocos metros de la iglesia La Catedral, en el casco céntrico de la ciudad de Loja, en las calles 10 de Agosto entre Bernardo Valdivieso y Olmedo. Fue fundado en 1597, Don Juan de Anderete solicitó la construcción de esta edificación. Es el segundo Monasterio que se creó en la Real Audiencia de Quito.<br>En 1705 se inauguró la pequeña iglesia que se ubica dentro del Monasterio, cuya parte está dada para el actual Museo de las Madres Conceptas, que tiene aproximadamente 300 años de vida, esta edificación es un patrimonio, la cédula de identidad de que Loja fue una ciudad colonial.<br>Otro de los elementos fundamentales en el Monasterio es la presencia de las Hermanas Conceptas, una población de monjas que dedican su vida al convento y claustro de idéntica manera como la vivieron hace unos 700 años atrás por sus antecesoras. ",
+    actividades: [
+      "Historia religiosa", 
+      "Museo", 
+      "Fotografía"]
+  },
+  {
+    nombre: "Museo Matilde Hidalgo de Procel",
+    categoria: "museos",
+    descripcion: "Homenaje a la primera médica y votante de Ecuador.",
+    imagenes: [
+      "images/museo_Matilde_Hidalgo_de_Procel.jpg"
+    ],
+    lat: -4.0073,
+    lng: -79.2068,
+    infoExtra: "Se exhiben objetos personales y logros históricos.",
+    actividades: ["Historia", "Cultura", "Educación"]
+  },
+  {
+    nombre: "Museo de la Musica",
+    categoria: "museos",
+    descripcion: "Espacio cultural dedicado a preservar y difundir la rica tradición musical de la región.",
+    imagenes: [
+      "el_sagrario/Centro Cultural Pio Jaramillo Alvarado/MuseoMusica1.jpg",
+      "el_sagrario/Centro Cultural Pio Jaramillo Alvarado/MuseoMusica2.jpg",
+      "el_sagrario/Centro Cultural Pio Jaramillo Alvarado/MuseoMusica3.jpg",
+      "el_sagrario/Centro Cultural Pio Jaramillo Alvarado/MuseoMusica4.jpg",
+      "el_sagrario/Centro Cultural Pio Jaramillo Alvarado/MuseoMusica5.jpg",
+      "el_sagrario/Centro Cultural Pio Jaramillo Alvarado/MuseoMusica6.jpg",
+      "el_sagrario/Centro Cultural Pio Jaramillo Alvarado/MuseoMusica7.jpg",
+    ],
+    lat: -4.0073,
+    lng: -79.2068,
+    infoExtra: "Está ubicado en el histórico edificio del antiguo Colegio Bernardo Valdivieso, restaurado como centro cultural desde el año 2000.<br>En sus salas se exhiben más de 7 000 partituras, unos 10 000 registros musicales y cerca de 65 instrumentos pertenecientes a músicos lojano‑ecuatorianos, cuya trayectoria abarca desde finales del siglo XIX hasta la actualidad.<br>Funciona como museo y también como galería de arte, con un patio central abierto donde se realizan exposiciones temporales, conciertos y talleres educativos de forma periódica . La entrada es gratuita y está abierto de lunes a viernes, generalmente de 8 h a 18 h. Este museo es clave para entender por qué Loja es considerada la “Capital Musical del Ecuador”, pues ofrece una experiencia visual, auditiva y participativa del legado sonoro de la región.",
+    actividades: ["Historia", "Cultura", "Educación"]
+  },
+  {
+    nombre: "Mural Rocafuerte",
+    categoria: "plazas",
+    descripcion: "obra artística ubicada en Loja que representa escenas históricas y culturales de la ciudad. Destaca por su colorido y simbolismo, rindiendo homenaje a personajes y tradiciones locales.",
+    imagenes: [
+      "el_sagrario/Mural Rocafuerte/MuralRocafuerte1.jpg",
+    ],
+    lat: -4.0073,
+    lng: -79.2068,
+    infoExtra: "Se exhiben objetos personales y logros históricos.",
+    actividades: ["Historia", "Cultura", "Educación"]
+  },
+  {
+    nombre: "Plaza San Sebastián",
+    categoria: "plazas",
+    descripcion: "Plaza con torre reloj y monumento a independencia.",
+    imagenes: [
+      "images/san_sebastian.jpg"
+    ],
+    lat: -4.0068,
+    lng: -79.2065,
+    infoExtra: "Torre de 32 m con relieves de la independencia.",
+    actividades: ["Historia", "Paseo urbano", "Fotografía"]
+  },
+  {
+    nombre: "Parque Central",
+    categoria: "parques",
+    descripcion: "Un hermoso parque en el centro de la ciudad, ideal para pasar el rato.",
+    imagenes: [
+      "Images/parquecentral.jpg"
+    ],
+    lat: -3.9966556,
+    lng: -79.2015829,
+    infoExtra: "La Plaza Central de Loja es uno de sus espacios públicos más importantes, rodeada de atractivos como el Museo Arqueológico, la iglesia Catedral, y el Museo Matilde Hidalgo de Procel. En el centro de la Plaza se encuentra una escultura de Bernardo Valdivieso, que fuera benefactor del colegio Bernardo Valdivieso. Aquí se realizan las manifestaciones de religioso cívico y político, a su alrededor se encuentran las edificaciones de gobierno como: Municipalidad, Gobernación de la Provincia, Consejo Provincial, Casa Episcopal, Museo del Banco Central del Ecuador; cercano al parque se cuenta con instituciones bancarias y comerciales que son indicadores de una ciudad progresista.",
+    actividades: [
+      "Se puede recorrer en familia y admirar los espacios para caminar y distraerse.",
+      "El Parque Central, en cuyo centro se encuentra un monumento a Bernardo Valdivieso; el Palacio del Consejo Provincial; Gobernación o Intendencia, la Casa Episcopal y el Palacio Municipal."
+    ]
+  },
+  {
+    nombre: "Parque Jipiro",
+    categoria: "parques",
+    descripcion: "Un hermoso parque en el centro de la ciudad, ideal para pasar el rato.",
+    imagenes: [
+      "Images/parquejipiro.jpg"
+    ],
+    lat: -3.9720658,
+    lng: -79.2057285,
+    infoExtra: "Cuenta con áreas verdes, juegos infantiles, senderos para caminar. Es un punto de encuentro para actividades al aire libre.",
+    actividades: [
+      "Caminatas",
+      "Paseos en bote",
+      "Juegos infantiles"
+    ]
+  },
+  {
+    nombre: "Puerta de la ciudad",
+    categoria: "monumentos",
+    descripcion: "Lugar de interes historico.",
+    imagenes: [
+      "images/puertadelaciudad.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc1.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc2.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc3.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc4.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc5.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc6.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc7.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc8.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc9.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc10.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc11.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc12.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc13.jpg",
+      "el_sagrario/puerta_de_la_ciudad/pdc14.jpg"
+    ],
+    lat: -3.989574,
+    lng: -79.20417,
+    infoExtra: "La Puerta de la Ciudad, es un monumento arquitectónico, uno de los mayores atractivos... [texto completo según proporcionado].",
+    actividades: [
+      "<b style='color:#233B54'>Visitar la galería de arqueología:</b> ...",
+      "<b style='color:#233B54'>Degustar de la Cafetería:</b> ...",
+      "<b style='color:#233B54'>Observar la vista panorámica de la ciudad:</b> ...",
+      "<b style='color:#233B54'>Visitar el almacén de artesanías y publicaciones:</b> ..."
+    ]
+  },
+  {
+    nombre: "Plazoleta Simon Bolivar",
+    categoria: "plazas",
+    descripcion: "Descubre la historia local en este museo interactivo.",
+    imagenes: [
+      "el_sagrario/plazoleta_simon_bolivar/pSB1.jpg",
+      "el_sagrario/plazoleta_simon_bolivar/pSB2.jpg",
+      "el_sagrario/plazoleta_simon_bolivar/pSB3.jpg",
+      "el_sagrario/plazoleta_simon_bolivar/pSB4.jpg",
+      "el_sagrario/plazoleta_simon_bolivar/pSB5.jpg",
+      "el_sagrario/plazoleta_simon_bolivar/pSB6.jpg",
+      "el_sagrario/plazoleta_simon_bolivar/pSB7.jpg"
+    ],
+    lat: 19.430123,
+    lng: -99.129876,
+    infoExtra: "Este mural rinde homenaje a Simón Bolívar, el líder que luchó por la independencia de varios países sudamericanos del dominio colonial español.Tiene como fondo una serie de líneas que forman el cielo y las montañas, con un mismo color en diferentes tonalidades, a la mitad derecha se encuentran dos montañas nevadas, en el centro tenemos un busto de Simón Bolívar, a la altura de la cintura y el pecho surge la bandera del Ecuador. En el mural de aldo se ve un grupo de soldados bolivarianos vestidos con el uniforme, caminando de espadas al espectador. En un segundo plano se ve un soldado con una franja blanca sobre su pecho, delante de éste un hombre de bigote, con sombrero blanco y un poncho rojo, con su mano derecha sostiene el cabo de una espada.",
+    actividades: [
+      "Visitar y admirar el mural",
+      "A 20 metros se encuentra la Puerta de la ciudad"
+
+    ]
+  },
+  {
+    nombre: "Plaza de San Francisco",
+    categoria: ["plazas", "iglesias"],
+    descripcion: "un espacio tradicional y concurrido, rodeado de historia, comercio y la emblemática iglesia del mismo nombre.",
+    imagenes: [
+      "el_sagrario/plaza_san_francisco/iglesiaSF1.jpg",
+      "el_sagrario/plaza_san_francisco/iglesiaSF2.jpg",
+      "el_sagrario/plaza_san_francisco/iglesiaSF3.jpg",
+      "el_sagrario/plaza_san_francisco/iglesiaSF4.jpg",
+      "el_sagrario/plaza_san_francisco/iglesiaSF5.jpg",
+      "el_sagrario/plaza_san_francisco/plazaSF1.jpg",
+      "el_sagrario/plaza_san_francisco/plazaSF2.jpg",
+      "el_sagrario/plaza_san_francisco/plazaSF3.jpg",
+      "el_sagrario/plaza_san_francisco/plazaSF4.jpg"
+    ],
+    lat: 19.430123,
+    lng: -99.129876,
+    infoExtra: "Exhibe piezas arqueológicas, documentos antiguos y exposiciones temporales. Cuenta con actividades para niños y una tienda de recuerdos.",
+    actividades: [
+      "Exposiciones",
+      "Talleres para niños",
+      "Tienda de recuerdos"
+    ]
+  },
+  {
+    nombre: "Parque Simon Bolivar",
+    categoria: "parques",
+    descripcion: "Un icónico parque que celebra la independencia nacional.",
+    imagenes: [
+      "images/parquesimonbolivar.jpg"
+    ],
+    lat: -3.9950751,
+    lng: -79.2046976,
+    infoExtra: "El Parque Simón Bolívar en Loja, Ecuador, es un espacio verde popular con áreas para picnics. Cuenta con monumentos históricos y estatuas en honor a Simón Bolívar y otros personajes importantes. Además, alberga eventos culturales y festivales. <br> Fue construido como homenaje al Tratado Binacional de Paz de Itamaraty, firmado el 26 de octubre de 1999, en Palacio de Itamaraty en Brasil, marcando el fin de la Guerra del Cenepa entre el Ecuador y Perú.",
+    actividades: [
+      "Un pequeño espacio que se abre para marcar la entrada hacia el centro desde la Avenida Universitaria, el parque Simón Bolívar es perfecto para pasear y dispersarse sin tener que alejarse mucho del centro.",
+      "Con bonitos jardines, pérgolas y espacios amplios para caminar y distraerse; y en el centro, su mayor atractivo y el origen de su nombre, un monumento de 6 imponentes columnas que rodean la estatua de Simón Bolívar, cada una en representación de un país de la Gran Colombia soñada por el Libertador.",
+      "Ubicado en la parroquia Loja, con acceso desde la Avenida Universitaria y la calle 18 de Noviembre, entre Imbabura y Colón."
+
+    ]
+  }
+];
+
+const filterBtn = document.getElementById('toggleFilter');
+const filterOptions = document.getElementById('filterOptions');
+const lugaresContainer = document.getElementById('lugaresContainer');
+const catBtns = document.getElementsByClassName('cat-btn');
+const buscador = document.getElementById('buscador');
+
+let categoriaSeleccionada = null;
+let textoBusqueda = "";
+
+filterBtn.addEventListener('click', () => {
+  filterOptions.classList.toggle('hidden');
+});
+
+function mostrarLugares(categoria = null, texto = "") {
+  lugaresContainer.innerHTML = '';
+  let filtrados = lugares;
+  
+    window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const lugarBuscado = params.get('lugar');
+
+    if (lugarBuscado) {
+      mostrarLugares(null, lugarBuscado);
+      buscador.value = lugarBuscado;
+    } else {
+      mostrarLugares();
+    }
+  });
+  
+  if (categoria) {
+    filtrados = filtrados.filter(l => {
+      const cats = Array.isArray(l.categoria) ? l.categoria : [l.categoria];
+      return cats.includes(categoria);
+    });
+  }
+  if (texto && texto.trim() !== "") {
+    const textoLower = texto.trim().toLowerCase();
+    filtrados = filtrados.filter(l =>
+      l.nombre.toLowerCase().includes(textoLower) ||
+      l.descripcion.toLowerCase().includes(textoLower)
+    );
+  }
+  if (filtrados.length === 0) {
+    lugaresContainer.innerHTML = '<p>No hay lugares que coincidan.</p>';
+    return;
+  }
+  filtrados.forEach((lugar, idx) => {
+    const card = document.createElement('div');
+    card.className = 'lugar-card';
+    const infoExtra = lugar.infoExtra || "";
+    const actividades = lugar.actividades && lugar.actividades.length
+      ? lugar.actividades.map(act => `<li>${act}</li>`).join('')
+      : "<li>No hay actividades registradas.</li>";
+    const imagenes = lugar.imagenes || [lugar.imagen];
+    card.innerHTML = `
+      <div class="carousel" data-idx="${idx}">
+        <button class="carousel-prev" style="display:${imagenes.length > 1 ? 'block' : 'none'}">&lt;</button>
+        <img src="${imagenes[0]}" alt="${lugar.nombre}" class="lugar-img" data-img="${imagenes[0]}" />
+        <button class="carousel-next" style="display:${imagenes.length > 1 ? 'block' : 'none'}">&gt;</button>
+      </div>
+      <div class="lugar-info">
+        <div class="lugar-title">${lugar.nombre}</div>
+        <div class="lugar-desc">${lugar.descripcion}</div>
+        <div class="lugar-mas-info" id="mas-info-${idx}">
+          ${infoExtra}
+        </div>
+        <div class="lugar-actividades-info" id="actividades-info-${idx}">
+          <ul style="margin:0 0 10px 18px;padding:0;color:#4a627a;font-size:0.98em;">
+            ${actividades}
+          </ul>
+        </div>
+        <div class="botones-centrados">
+          <button class="ver-mas-btn" data-idx="${idx}">Ver más</button>
+          <button class="maps-btn" onclick="abrirMaps(${lugar.lat},${lugar.lng})">
+            Ver en Maps
+          </button>
+          <button class="actividades-btn" data-idx="${idx}">Actividades</button>
+        </div>
+      </div>
+    `;
+    lugaresContainer.appendChild(card);
+  });
+
+  Array.from(catBtns).forEach(btn => {
+    btn.addEventListener('click', () => {
+      const categoria = btn.getAttribute('data-category');
+      categoriaSeleccionada = categoria === "ninguno" ? null : categoria;
+      mostrarLugares(categoriaSeleccionada, textoBusqueda);
+    });
+  });
+  document.querySelectorAll('.lugar-img').forEach(img => {
+    img.addEventListener('click', function() {
+      const src = img.getAttribute('data-img');
+      const alt = img.getAttribute('alt') || "Imagen ampliada";
+      document.getElementById('imgModalImg').src = src;
+      document.getElementById('imgModalImg').alt = alt;
+      const downloadBtn = document.getElementById('downloadImgBtn');
+      downloadBtn.href = src;
+      downloadBtn.setAttribute('download', alt.replace(/\s+/g, '_').toLowerCase());
+      document.getElementById('imgModal').classList.add('active');
+    });
+  });
+  document.querySelectorAll('.ver-mas-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const idx = btn.getAttribute('data-idx');
+      const infoDiv = document.getElementById('mas-info-' + idx);
+      const isVisible = infoDiv.classList.contains('visible');
+      document.querySelectorAll('.lugar-mas-info').forEach(div => div.classList.remove('visible'));
+      document.querySelectorAll('.ver-mas-btn').forEach(b => {
+        b.textContent = 'Ver más';
+        b.classList.remove('active');
+      });
+      if (!isVisible) {
+        infoDiv.classList.add('visible');
+        btn.textContent = 'Ocultar';
+        btn.classList.add('active');
+      }
+    });
+  });
+  document.querySelectorAll('.actividades-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const idx = btn.getAttribute('data-idx');
+      const actDiv = document.getElementById('actividades-info-' + idx);
+      const isVisible = actDiv.classList.contains('visible');
+      document.querySelectorAll('.lugar-actividades-info').forEach(div => div.classList.remove('visible'));
+      document.querySelectorAll('.actividades-btn').forEach(b => {
+        b.textContent = 'Actividades';
+        b.classList.remove('active');
+      });
+      if (!isVisible) {
+        actDiv.classList.add('visible');
+        btn.textContent = 'Ocultar';
+        btn.classList.add('active');
+      }
+    });
+  });
+  const carousels = document.querySelectorAll('.carousel');
+  carousels.forEach(carousel => {
+    const idx = carousel.getAttribute('data-idx');
+    let current = 0;
+    const lugar = filtrados[idx];
+    const imagenes = lugar.imagenes || [lugar.imagen];
+    const imgEl = carousel.querySelector('.lugar-img');
+    const prevBtn = carousel.querySelector('.carousel-prev');
+    const nextBtn = carousel.querySelector('.carousel-next');
+    function updateImg() {
+      imgEl.src = imagenes[current];
+      imgEl.setAttribute('data-img', imagenes[current]);
+    }
+    if (prevBtn) prevBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      current = (current - 1 + imagenes.length) % imagenes.length;
+      updateImg();
+    });
+    if (nextBtn) nextBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      current = (current + 1) % imagenes.length;
+      updateImg();
+    });
+  });
+}
+
+buscador.addEventListener('input', function() {
+  textoBusqueda = buscador.value;
+  mostrarLugares(categoriaSeleccionada, textoBusqueda);
+});
+
+Array.from(catBtns).forEach(btn => {
+  btn.addEventListener('click', () => {
+    Array.from(catBtns).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    categoriaSeleccionada = btn.dataset.category;
+    mostrarLugares(categoriaSeleccionada, textoBusqueda);
+    filterOptions.classList.add('hidden');
+  });
+});
+
+document.addEventListener('click', function(event) {
+  const isFilterBtn = filterBtn.contains(event.target);
+  const isFilterOptions = filterOptions.contains(event.target);
+  if (!isFilterBtn && !isFilterOptions) {
+    filterOptions.classList.add('hidden');
+  }
+});
+
+window.abrirMaps = function(lat, lng) {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const userLat = pos.coords.latitude;
+        const userLng = pos.coords.longitude;
+        const url = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${lat},${lng}&travelmode=driving`;
+        window.open(url, '_blank');
+      },
+      () => {
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+        window.open(url, '_blank');
+      }
+    );
+  } else {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    window.open(url, '_blank');
+  }
+}
+
+mostrarLugares();
+
+const categoryFilter = document.querySelector('.category-filter');
+window.addEventListener('scroll', () => {
+  const rect = categoryFilter.getBoundingClientRect();
+  if (rect.top <= 0) {
+    categoryFilter.classList.add('stuck');
+  } else {
+    categoryFilter.classList.remove('stuck');
+  }
+});
+document.getElementById('closeImgModal').addEventListener('click', function() {
+  document.getElementById('imgModal').classList.remove('active');
+});
+document.getElementById('imgModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.classList.remove('active');
+  }
+});
+  </script>
+</body>
+</html>

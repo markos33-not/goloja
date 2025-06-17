@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Perfil</title>
+  <link rel="stylesheet" href="allstyle.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    .perfil-menu-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 50vh;
+      background: #f5f7fa;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      position: relative;
+      padding-top: 32px;
+    }
+    .volver-atras {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      text-decoration: none;
+      color: #1976d2;
+      background: #fff;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(26, 115, 232, 0.10);
+      transition: background 0.2s, color 0.2s;
+      z-index: 20;
+      font-size: 0;
+    }
+    .volver-atras .material-symbols-outlined {
+      font-size: 28px;
+      color: #000000;
+    }
+    .volver-atras:hover {
+      background: #e9f2ff;
+      color: #125ea7;
+    }
+    .foto-perfil {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #000000;
+      box-shadow: 0 2px 8px rgba(26, 115, 232, 0.10);
+      cursor: pointer;
+      background: #fff;
+      transition: box-shadow 0.2s;
+    }
+    .foto-perfil:hover {
+      box-shadow: 0 4px 16px rgba(26, 115, 232, 0.18);
+    }
+    .foto-opciones {
+      display: none;
+      position: absolute;
+      top: 140px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      padding: 8px 0;
+      min-width: 160px;
+      z-index: 10;
+      text-align: left;
+    }
+    .foto-opciones button {
+      display: block;
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 10px 20px;
+      text-align: left;
+      font-size: 15px;
+      color: #000000;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-weight: bold;
+    }
+
+    .foto-opciones .Eliminarfoto {
+        color: #ff0000;
+    }
+
+    .foto-opciones .Cambiarfoto {
+        color: #0080ff;
+    }
+    .modal-editar-perfil {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(8px) saturate(160%);
+    -webkit-backdrop-filter: blur(8px) saturate(160%);
+    align-items: center;
+    justify-content: center;
+    }
+    .modal-editar-perfil.active {
+      display: flex;
+    }
+    .modal-editar-perfil .modal-content {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px 20px 16px 20px;
+      min-width: 260px;
+      max-width: 90vw;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+      position: relative;
+      text-align: center;
+    }
+
+    .modal-editar-perfil .modal-content input[type="text"],
+    .modal-editar-perfil .modal-content input[type="email"] {
+    width: 90%;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    border: none;
+    border-bottom: 2px solid #e0e0e0;
+    background: transparent;
+    outline: none;
+    font-size: 16px;
+    color: #222;
+    transition: border-color 0.2s;
+    border-radius: 0;
+    box-shadow: none;
+    }
+    .modal-editar-perfil .modal-content input[type="text"]:focus,
+    .modal-editar-perfil .modal-content input[type="email"]:focus {
+    border-bottom: 4px solid #000000;
+    background: transparent;
+    }
+
+    .cerrar-modal {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: none;
+      border: none;
+      font-size: 0;
+      cursor: pointer;
+    }
+    .cerrar-modal .material-symbols-outlined {
+      font-size: 24px;
+      color: #888;
+      transition: color 0.2s;
+    }
+    .cerrar-modal:hover .material-symbols-outlined {
+      color: #000000;
+    }
+    .perfil-opciones, .config-opciones {
+      margin: 24px auto 0 auto;
+      width: 90%;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 12px 0;
+    }
+    .perfil-opciones h3, .config-opciones h3 {
+      margin: 0 0 8px 20px;
+      font-size: 16px;
+      color: #000000;
+    }
+    .perfil-opciones ul, .config-opciones ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .perfil-opciones li, .config-opciones li {
+      padding: 10px 20px;
+      cursor: pointer;
+      color: #333;
+      transition: background 0.2s;
+    }
+    .perfil-opciones li:hover, .config-opciones li:hover {
+      background: #f0f4fa;
+    }
+    #inputFotoPerfil {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="perfil-menu-container">
+    <a href="index.html" class="volver-atras" title="Volver">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <img src="" alt="Foto de perfil" class="foto-perfil" id="fotoPerfil">
+    <input type="file" id="inputFotoPerfil" accept="image/*">
+    <div class="foto-opciones" id="fotoOpciones">
+      <button id="agregarFoto">Agregar foto</button>
+      <button  class="Eliminarfoto"  id="eliminarFoto">Eliminar foto</button>
+      <button class="Cambiarfoto" id="cambiarFoto">Cambiar foto</button>
+    </div>
+    <div class="perfil-info" style="text-align:center; margin-top:16px;">
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+        <h2 id="nombreUsuario" style="margin:0;"></h2>
+        <button id="editarPerfilBtn" title="Editar" style="background:none;border:none;cursor:pointer;">
+          <span class="material-symbols-outlined" style="font-size:22px;color:#393e42;">edit</span>
+        </button>
+      </div>
+      <p id="correoUsuario" style="color:#888; margin:0;"></p>
+      <p id="origenUsuario" style="color:#888; margin:0;"></p>
+    </div>
+  </div>
+
+  <div id="modalEditarPerfil" class="modal-editar-perfil">
+    <div class="modal-content">
+      <button id="cerrarModalPerfil" class="cerrar-modal" title="Cerrar">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <h3 style="margin-top:0;">Editar perfil</h3>
+      <input id="inputNombre" type="text" style="margin-bottom:4px;" placeholder="Nombre de Usuario"><br>
+      <input id="inputCorreo" type="email" style="margin-bottom:4px;" placeholder="Correo"><br>
+      <input id="inputOrigen" type="text" style="margin-bottom:4px;" placeholder="País, Cantón"><br>
+      <button id="guardarPerfilBtn" title="Guardar" style="background:none;border:none;cursor:pointer;">
+          <span class="material-symbols-outlined" style="font-size:28px;color:#3c4146;">check_circle</span>
+      </button>
+      <button id="cancelarPerfilBtn" title="Cancelar" style="background:none;border:none;cursor:pointer;">
+          <span class="material-symbols-outlined" style="font-size:28px;color:#ff0000;">cancel</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="perfil-opciones">
+    <h3>Opciones de Perfil</h3>
+    <ul>
+      <li>Ver actividad</li>
+      <li>Favoritos</li>
+      <li>Mis comentarios</li>
+    </ul>
+  </div>
+
+  <div class="config-opciones">
+    <h3>Configuración</h3>
+    <ul>
+      <li>Notificaciones</li>
+      <li>Idioma</li>
+      <li>Cerrar sesión</li>
+    </ul>
+  </div>
+
+  <script>
+    const fotoPerfil = document.getElementById('fotoPerfil');
+    const fotoOpciones = document.getElementById('fotoOpciones');
+    const inputFoto = document.getElementById('inputFotoPerfil');
+    const agregarBtn = document.getElementById('agregarFoto');
+    const cambiarBtn = document.getElementById('cambiarFoto');
+    const eliminarBtn = document.getElementById('eliminarFoto');
+    const defaultFoto = "Profile.jpg";
+
+    fotoPerfil.src = defaultFoto;
+
+    fotoPerfil.addEventListener('click', () => {
+      fotoOpciones.style.display = fotoOpciones.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('mousedown', (e) => {
+      if (!fotoPerfil.contains(e.target) && !fotoOpciones.contains(e.target)) {
+        fotoOpciones.style.display = 'none';
+      }
+    });
+
+    agregarBtn.addEventListener('click', () => {
+      inputFoto.click();
+    });
+    cambiarBtn.addEventListener('click', () => {
+      inputFoto.click();
+    });
+    inputFoto.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          fotoPerfil.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+      fotoOpciones.style.display = 'none';
+      inputFoto.value = '';
+    });
+
+    eliminarBtn.addEventListener('click', () => {
+      fotoPerfil.src = defaultFoto;
+      fotoOpciones.style.display = 'none';
+    });
+
+    const editarBtn = document.getElementById('editarPerfilBtn');
+    const modalEditar = document.getElementById('modalEditarPerfil');
+    const cerrarModal = document.getElementById('cerrarModalPerfil');
+    const nombreUsuario = document.getElementById('nombreUsuario');
+    const correoUsuario = document.getElementById('correoUsuario');
+    const origenUsuario = document.getElementById('origenUsuario');
+    const inputNombre = document.getElementById('inputNombre');
+    const inputCorreo = document.getElementById('inputCorreo');
+    const inputOrigen = document.getElementById('inputOrigen');
+    const guardarBtn = document.getElementById('guardarPerfilBtn');
+    const cancelarBtn = document.getElementById('cancelarPerfilBtn');
+
+    editarBtn.addEventListener('click', () => {
+      modalEditar.classList.add('active');
+      inputNombre.value = nombreUsuario.textContent;
+      inputCorreo.value = correoUsuario.textContent;
+      inputOrigen.value = origenUsuario.textContent;
+    });
+
+    cerrarModal.addEventListener('click', () => {
+      modalEditar.classList.remove('active');
+    });
+    cancelarBtn.addEventListener('click', () => {
+      modalEditar.classList.remove('active');
+    });
+    guardarBtn.addEventListener('click', () => {
+      nombreUsuario.textContent = inputNombre.value;
+      correoUsuario.textContent = inputCorreo.value;
+      origenUsuario.textContent = inputOrigen.value;
+      modalEditar.classList.remove('active');
+    });
+    modalEditar.addEventListener('mousedown', function(e) {
+    if (e.target === modalEditar) {
+        modalEditar.classList.remove('active');
+    }
+    });
+  </script>
+</body>
+</html>
